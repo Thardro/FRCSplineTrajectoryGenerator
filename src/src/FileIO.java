@@ -34,4 +34,8 @@ PrintStream writer;
 		writer.flush();
 	}
 	
+	public void closeFile() {
+		writer.close();
+	}
+	
 }

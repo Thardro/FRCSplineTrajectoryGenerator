@@ -12,6 +12,8 @@ public class Spline {
 	
 	double straightLength;
 	
+	double arcLength = 0;
+	
 	public Spline(double x0, double y0, double theta0,
 			double x1, double y1, double theta1) {
 		this.x0 = x0;
@@ -27,31 +29,65 @@ public class Spline {
 		thetaOffset = Math.atan2(y1 - y0, x1 - x0);
 		double offsetTheta0 = theta0 - thetaOffset;
 		double offsetTheta1 = theta1 - thetaOffset;
-		System.out.println("thetaOffset = " + thetaOffset + ", offsetTheta0 = " + offsetTheta0 + ","
-				+ " offsetTheta1 = " + offsetTheta1);
 		
 		//Calculating derivative at start and end point
 		double dydx0 = Math.tan(offsetTheta0);
 		double dydx1 = Math.tan(offsetTheta1);
-		System.out.println(dydx1);
 		
 		//Calculating constants
 		a = -3 * (dydx0 + dydx1) / Math.pow(straightLength, 4);
 		b = (8 * dydx0 + 7 * dydx1) / Math.pow(straightLength, 3);
 		c = (-6 * dydx0 - 4 * dydx1) / Math.pow(straightLength, 2);
 		e = dydx0;
-		
-		System.out.println(a + "*x^5 + " + b + "*x^4 + " + c + "*x^3 + " + e + "*x");
 	}
 	
-	public double getY(double x) {
-		double xScalar = straightLength / Math.abs(x1 - x0);
-		double rotatedX = x * xScalar;
-		double rotatedY = a * Math.pow(rotatedX, 5) + b * Math.pow(rotatedX, 4)
-							+ c * Math.pow(rotatedX, 3) + e * rotatedX;
-		double y = Math.sin(thetaOffset) * rotatedX + Math.cos(thetaOffset) * rotatedY + yOffset;
+	public String getFormula() {
+		return a + "*x^5 + " + b + "*x^4 + " + c + "*x^3 + " + e + "*x";
+	}
+	
+	public double getLength() {
+		if(arcLength == 0) {
+			calculateLength();
+		}
 		
-		return y;
+		return arcLength;
+	}
+	
+	public double getPercentFromDistance(double distance) {
+		return distance / getLength();
+	}
+	
+	public double[] getPoint(double percent) {
+		double[] point = new double[2];
+		
+		double rotatedX = percent * straightLength;
+		double rotatedY = a * Math.pow(rotatedX, 5) + b * Math.pow(rotatedX, 4)
+			+ c * Math.pow(rotatedX, 3) + e * rotatedX;
+		
+		point[0] = rotatedX * Math.cos(thetaOffset) - rotatedY * Math.sin(thetaOffset) + xOffset;
+		point[1] = rotatedX * Math.sin(thetaOffset) + rotatedY * Math.cos(thetaOffset) + yOffset;
+		
+		return point;
+	}
+	
+	public double getDerivative(double percentage) {
+		double percentX = straightLength * percentage;
+		double dydx = 5 * a * Math.pow(percentX, 4) + 4 * b * Math.pow(percentX, 3)
+			+ 3 * c * Math.pow(percentX, 2) + e;
+		
+		return dydx;
+	}
+	
+	//Calculating arclength using the limit definition and a high number of samples
+	private void calculateLength() {
+		final int numSamples = 100000;
+		double dydx;
+		
+		for(int i = 1; i <= numSamples; i++) {
+			dydx = getDerivative((double) i / numSamples);
+			arcLength += Math.sqrt(1 + Math.pow(dydx, 2));
+		}
+		arcLength *= straightLength / numSamples;
 	}
 	
 }
