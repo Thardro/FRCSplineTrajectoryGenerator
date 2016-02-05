@@ -6,6 +6,7 @@ public class Trajectory {
 		int dt;
 		double position, velocity, acceleration;
 		double x, y;
+		double heading;
 		
 		public void setDT(int dt) {
 			this.dt = dt;
@@ -31,6 +32,10 @@ public class Trajectory {
 			this.y = y;
 		}
 		
+		public void setHeading(double heading) {
+			this.heading = heading;
+		}
+		
 		public int getDT() {
 			return dt;
 		}
@@ -53,6 +58,10 @@ public class Trajectory {
 		
 		public double getY() {
 			return y;
+		}
+		
+		public double getHeading() {
+			return heading;
 		}
 	}
 	

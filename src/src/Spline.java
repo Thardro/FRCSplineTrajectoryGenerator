@@ -78,6 +78,12 @@ public class Spline {
 		return dydx;
 	}
 	
+	public double getAngle(double percentage){
+		double angle = Math.atan(getDerivative(percentage)) + thetaOffset;
+		
+		return angle;
+	}
+	
 	//Calculating arclength using the limit definition and a high number of samples
 	private void calculateLength() {
 		final int numSamples = 100000;
