@@ -3,13 +3,13 @@ package src;
 public class Trajectory {
 
 	public static class Point {
-		int dt;
+	double dt;
 		double position, velocity, acceleration;
 		double x, y;
 		double heading;
 		
-		public void setDT(int dt) {
-			this.dt = dt;
+		public void setDT(double itp) {
+			this.dt = itp;
 		}
 		
 		public void setPosition(double position) {
@@ -36,7 +36,7 @@ public class Trajectory {
 			this.heading = heading;
 		}
 		
-		public int getDT() {
+		public double getDT() {
 			return dt;
 		}
 		

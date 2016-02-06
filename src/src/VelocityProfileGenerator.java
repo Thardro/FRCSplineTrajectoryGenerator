@@ -6,7 +6,7 @@ public class VelocityProfileGenerator {
 		int currentPoint = 0;
 
 	//Time between each point in ms
-	int itp;
+	double itp;
 			
 	//Time for each filter in ms
 	double time1, time2;
@@ -38,7 +38,7 @@ public class VelocityProfileGenerator {
 	//Array with all values of filterSum1
 	double[] filterSums1;
 	
-	public VelocityProfileGenerator(int itp, double time1, double time2, 
+	public VelocityProfileGenerator(double itp, double time1, double time2, 
 			double maxVelocity, double distance) {
 		this.itp = itp;
 		this.time1 = time1;
