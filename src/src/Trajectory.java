@@ -3,7 +3,7 @@ package src;
 public class Trajectory {
 
 	public static class Point {
-	double dt;
+		double dt;
 		double position, velocity, acceleration;
 		double x, y;
 		double heading;

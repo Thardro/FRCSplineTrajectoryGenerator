@@ -80,11 +80,17 @@ public class TrajectoryGenerator {
 				currentSidePoint.setVelocity(0);
 			}
 			else {
-				double distance = Math.sqrt(
+				double distanceSide = Math.sqrt(
 						Math.pow(currentSidePoint.getX() - sideTrajectory.getPoint(i - 1).getX(), 2)
 						+ Math.pow(currentSidePoint.getY() - sideTrajectory.getPoint(i - 1).getY(), 2));
-				currentSidePoint.setPosition(sideTrajectory.getPoint(i - 1).getPosition() + distance);
-				currentSidePoint.setVelocity(distance / (currentSidePoint.getDT() / 1000) );
+				currentSidePoint.setPosition(sideTrajectory.getPoint(i - 1).getPosition() + distanceSide);
+				currentSidePoint.setVelocity(distanceSide / (currentSidePoint.getDT() / 1000) );
+				
+				double distanceCenter = Math.sqrt(
+						Math.pow(currentCenterPoint.getX() - centerTrajectory.getPoint(i - 1).getX(), 2)
+						+ Math.pow(currentCenterPoint.getY() - centerTrajectory.getPoint(i - 1).getY(), 2));
+				currentCenterPoint.setPosition(centerTrajectory.getPoint(i - 1).getPosition() + distanceCenter);
+				currentCenterPoint.setVelocity(distanceCenter / (currentCenterPoint.getDT() / 1000) );
 			}
 		}
 		

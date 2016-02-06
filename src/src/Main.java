@@ -12,7 +12,7 @@ public class Main {
 	
 	//Velocity settings
 	static double filter1 = 400, filter2 = 200, maxVelocity = 4;
-	static double dt = 10;
+	static double dt = 20;
 	
 	//Robot parameters
 	static double wheelbaseWidth = 2;
@@ -24,7 +24,12 @@ public class Main {
 		
 		fileIO.openFile("Profile.txt");
 		for(int i = 0; i < trajectory[0].getLength(); i++) {
-			fileIO.writeToFile(trajectory[0].getPoint(i).getVelocity() + "\t" + trajectory[0].getPoint(i).getPosition());
+			fileIO.writeToFile(trajectory[0].getPoint(i).getVelocity() + "\t" + 
+						trajectory[0].getPoint(i).getPosition() + "\t" +
+						trajectory[1].getPoint(i).getVelocity() + "\t" +
+						trajectory[1].getPoint(i).getPosition() + "\t" +
+						trajectory[2].getPoint(i).getVelocity() + "\t" +
+						trajectory[2].getPoint(i).getPosition());
 		}
 		fileIO.closeFile();
 		
