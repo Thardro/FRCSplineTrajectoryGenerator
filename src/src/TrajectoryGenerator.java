@@ -8,14 +8,17 @@ public class TrajectoryGenerator {
 	static double maxAchievedVelocity = 0;
 	
 	public static Trajectory[] generateTrajectory(WaypointSequence waypointSequence, double dt, double filter1, 
-			double filter2, double maxVelocity, double wheelbaseWidth, boolean speedChecked) {
+			double filter2, double maxVelocity, double wheelbaseWidth) {
 		//Calculating trajectory of center of the robot
 		int numSegments = waypointSequence.getSize() - 1;
 		Trajectory[] centerTrajectorySequence = new Trajectory[waypointSequence.getSize() - 1];
 		int numPoints = 0;
 		
 		//Generating a center trajectory for each pair of waypoints
-		WaypointSequence.Waypoint previousPoint = waypointSequence.getWaypoint(0);
+		double startX = waypointSequence.getWaypoint(0).getX();
+		double startY = waypointSequence.getWaypoint(0).getY();
+		double startTheta = waypointSequence.getWaypoint(0).getTheta();
+		WaypointSequence.Waypoint previousPoint = new WaypointSequence.Waypoint(startX, startY, startTheta);
 		for(int i = 0; i < numSegments; i++) {
 			WaypointSequence.Waypoint startPoint = previousPoint;
 			WaypointSequence.Waypoint endPoint = waypointSequence.getWaypoint(i + 1);
@@ -53,13 +56,7 @@ public class TrajectoryGenerator {
 		trajectory[1] = generateSideFromCenter(centerTrajectory, wheelbaseWidth, Side.RIGHT);
 		trajectory[2] = centerTrajectory;
 		
-		//Scaling velocity and regenerating based on max velocity achieved
-		/*
-		if(!speedChecked) {
-			double scaledVelocity = maxVelocity / maxAchievedVelocity * maxVelocity;
-			trajectory = generateTrajectory(waypointSequence, dt, filter1, filter2, scaledVelocity, wheelbaseWidth, true);
-		}
-		*/
+		trajectory[2].setMaxAchievedSpeed(maxAchievedVelocity);
 		
 		return trajectory;
 	}
@@ -77,7 +74,6 @@ public class TrajectoryGenerator {
 		
 		//Generating spline path for center of robot from given start and end points
 		Spline centerPath = new Spline(x0, y0, theta0, x1, y1, theta1);
-		System.out.println(centerPath.getLength());
 		
 		//Generating a basic velocity curve for the center of the robot
 		VelocityProfileGenerator velProfile = new VelocityProfileGenerator(

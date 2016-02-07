@@ -67,6 +67,7 @@ public class Trajectory {
 	}
 	
 	Point[] points;
+	double maxAchievedSpeed;
 	
 	public Trajectory(int numPoints) {
 		points = new Point[numPoints];
@@ -75,12 +76,20 @@ public class Trajectory {
 		}
 	}
 	
+	public void setMaxAchievedSpeed(double maxAchievedSpeed) {
+		this.maxAchievedSpeed = maxAchievedSpeed;
+	}
+	
 	public Point getPoint(int pointNumber) {
 		return points[pointNumber];
 	}
 	
 	public int getLength() {
 		return points.length;
+	}
+	
+	public double getMaxAchievedSpeed() {
+		return maxAchievedSpeed;
 	}
 	
 }

@@ -3,7 +3,7 @@ package src;
 import java.util.ArrayList;
 
 public class WaypointSequence {
-	public class Waypoint {
+	public static class Waypoint {
 		double x, y, theta;
 		
 		public Waypoint(double x, double y, double theta) {
