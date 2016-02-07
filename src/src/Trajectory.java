@@ -4,9 +4,18 @@ public class Trajectory {
 
 	public static class Point {
 		double dt;
-		double position, velocity, acceleration;
+		double position, velocity;
 		double x, y;
 		double heading;
+		
+		public void copyPoint(Point point, double positionOffset) {
+			this.dt = point.getDT();
+			this.position = point.getPosition() + positionOffset;
+			this.velocity = point.getVelocity();
+			this.x = point.getX();
+			this.y = point.getY();
+			this.heading = point.getHeading();
+		}
 		
 		public void setDT(double itp) {
 			this.dt = itp;
@@ -18,10 +27,6 @@ public class Trajectory {
 		
 		public void setVelocity(double velocity) {
 			this.velocity = velocity;
-		}
-		
-		public void setAcceleration(double acceleration) {
-			this.acceleration = acceleration;
 		}
 		
 		public void setX(double x) {
@@ -46,10 +51,6 @@ public class Trajectory {
 		
 		public double getVelocity() {
 			return velocity;
-		}
-		
-		public double getAcceleration() {
-			return acceleration;
 		}
 		
 		public double getX() {

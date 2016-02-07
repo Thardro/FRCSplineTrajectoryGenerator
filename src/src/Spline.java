@@ -84,7 +84,7 @@ public class Spline {
 		return angle;
 	}
 	
-	//Calculating arclength using the limit definition and a high number of samples
+	//Calculating arclength using a riemann sum and a high number of samples
 	private void calculateLength() {
 		final int numSamples = 100000;
 		double dydx;

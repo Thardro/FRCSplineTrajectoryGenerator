@@ -3,12 +3,6 @@ package src;
 public class Main {
 	
 	static FileIO fileIO = new FileIO();
-
-	//Start point
-	static double x0 = 0, y0 = 0, theta0 = 0;
-	
-	//End point
-	static double x1 = 10, y1 = 5, theta1 = Math.PI / 2;
 	
 	//Velocity settings
 	static double filter1 = 400, filter2 = 200, maxVelocity = 4;
@@ -18,8 +12,13 @@ public class Main {
 	static double wheelbaseWidth = 2;
 	
 	public static void main(String[] args) {
+		WaypointSequence sequence = new WaypointSequence();
+		sequence.addWaypoint(0, 0, 0);
+		sequence.addWaypoint(10, 5, Math.PI / 2);
+		sequence.addWaypoint(20, 15, Math.PI / 2);
+		
 		Trajectory[] trajectory = TrajectoryGenerator.generateTrajectory(
-				x0, y0, theta0, x1, y1, theta1, dt, filter1, filter2, maxVelocity, wheelbaseWidth);
+				sequence, dt, filter1, filter2, maxVelocity, wheelbaseWidth, false);
 		
 		
 		fileIO.openFile("Profile.txt");
