@@ -13,6 +13,9 @@ public class Spline {
 	double straightLength;
 	
 	double arcLength = 0;
+	final int numSamples = 1000000;
+	
+	double[][] arcLengthToX = new double[numSamples][2];
 	
 	public Spline(double x0, double y0, double theta0,
 			double x1, double y1, double theta1) {
@@ -60,7 +63,23 @@ public class Spline {
 	public double[] getPoint(double percent) {
 		double[] point = new double[2];
 		
-		double rotatedX = percent * straightLength;
+		//Performing binary search to find x value for the input arclength
+		double currentArcLength = percent * arcLength;
+		int lowerLimit = 0;
+		int upperLimit = numSamples - 1;
+		int currentIndex = (lowerLimit + upperLimit) / 2;
+		while(lowerLimit <= upperLimit) {
+			currentIndex = (lowerLimit + upperLimit) / 2;
+			if(arcLengthToX[currentIndex][0] > currentArcLength) {
+				upperLimit = currentIndex - 1;
+			}
+			else {
+				lowerLimit = currentIndex + 1;
+			}
+			
+		}
+		
+		double rotatedX = arcLengthToX[currentIndex][1];
 		double rotatedY = a * Math.pow(rotatedX, 5) + b * Math.pow(rotatedX, 4)
 			+ c * Math.pow(rotatedX, 3) + e * rotatedX;
 		
@@ -71,7 +90,26 @@ public class Spline {
 	}
 	
 	public double getDerivative(double percentage) {
-		double percentX = straightLength * percentage;
+		/*
+		//Performing binary search to find x value for the input arclength
+		double currentArcLength = percentage * arcLength;
+		int lowerLimit = 0;
+		int upperLimit = numSamples - 1;
+		int currentIndex = (lowerLimit + upperLimit) / 2;
+		while(lowerLimit <= upperLimit) {
+			currentIndex = (lowerLimit + upperLimit) / 2;
+			if(arcLengthToX[currentIndex][0] > currentArcLength) {
+				upperLimit = currentIndex - 1;
+			}
+			else {
+				lowerLimit = currentIndex + 1;
+			}
+			
+		}
+				
+		double percentX = arcLengthToX[currentIndex][1];
+		*/
+		double percentX = percentage * straightLength;
 		double dydx = 5 * a * Math.pow(percentX, 4) + 4 * b * Math.pow(percentX, 3)
 			+ 3 * c * Math.pow(percentX, 2) + e;
 		
@@ -86,14 +124,16 @@ public class Spline {
 	
 	//Calculating arclength using a riemann sum and a high number of samples
 	private void calculateLength() {
-		final int numSamples = 100000;
 		double dydx;
 		
 		for(int i = 1; i <= numSamples; i++) {
 			dydx = getDerivative((double) i / numSamples);
-			arcLength += Math.sqrt(1 + Math.pow(dydx, 2));
+			arcLength += Math.sqrt(1 + Math.pow(dydx, 2)) * straightLength / numSamples;
+			
+			arcLengthToX[i - 1][0] = arcLength;
+			arcLengthToX[i - 1][1] = (double) i / numSamples * straightLength;
 		}
-		arcLength *= straightLength / numSamples;
+		
 	}
 	
 }

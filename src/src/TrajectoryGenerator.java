@@ -6,49 +6,14 @@ public class TrajectoryGenerator {
 	}
 	
 	static double maxAchievedVelocity = 0;
+	static double totalLength = 0;
 	
 	public static Trajectory[] generateTrajectory(WaypointSequence waypointSequence, double dt, double filter1, 
 			double filter2, double maxVelocity, double wheelbaseWidth) {
-		//Calculating trajectory of center of the robot
-		int numSegments = waypointSequence.getSize() - 1;
-		Trajectory[] centerTrajectorySequence = new Trajectory[waypointSequence.getSize() - 1];
-		int numPoints = 0;
+		Spline[] centerTrajectorySequence = generateCenterSplines(waypointSequence);
 		
-		//Generating a center trajectory for each pair of waypoints
-		double startX = waypointSequence.getWaypoint(0).getX();
-		double startY = waypointSequence.getWaypoint(0).getY();
-		double startTheta = waypointSequence.getWaypoint(0).getTheta();
-		WaypointSequence.Waypoint previousPoint = new WaypointSequence.Waypoint(startX, startY, startTheta);
-		for(int i = 0; i < numSegments; i++) {
-			WaypointSequence.Waypoint startPoint = previousPoint;
-			WaypointSequence.Waypoint endPoint = waypointSequence.getWaypoint(i + 1);
-			centerTrajectorySequence[i] = generateCenterTrajectory(
-					startPoint, endPoint, dt, filter1, filter2, maxVelocity);
-			int currentLength = centerTrajectorySequence[i].getLength();	
-			
-			//Setting the start of the next segment to the actual end of the previous one to account for error
-			double endX = centerTrajectorySequence[i].getPoint(currentLength - 1).getX();
-			double endY = centerTrajectorySequence[i].getPoint(currentLength - 1).getY();
-			previousPoint.setX(endX);
-			previousPoint.setY(endY);
-			previousPoint.setTheta(endPoint.getTheta());
-			
-			numPoints += currentLength;
-		}
-		
-		//Adding the center trajectories into one
-		Trajectory centerTrajectory = new Trajectory(numPoints);
-		double positionOffset = 0;
-		int pointOffset = 0;
-		for(int i = 0; i < numSegments; i++) {
-			Trajectory currentSegment = centerTrajectorySequence[i];
-			for(int n = 0; n < currentSegment.getLength(); n++) {
-				Trajectory.Point currentPoint = currentSegment.getPoint(n);
-				centerTrajectory.getPoint(n + pointOffset).copyPoint(currentPoint, positionOffset);
-			}
-			positionOffset += currentSegment.getPoint(currentSegment.getLength() - 1).getPosition();
-			pointOffset += currentSegment.getLength();
-		}
+		Trajectory centerTrajectory = generateCenterTrajectory(centerTrajectorySequence, 
+				dt, filter1, filter2, maxVelocity, totalLength);
 		
 		//Calculating trajectory of each side using the center
 		Trajectory[] trajectory = new Trajectory[3];
@@ -61,39 +26,90 @@ public class TrajectoryGenerator {
 		return trajectory;
 	}
 	
-	private static Trajectory generateCenterTrajectory(
-			WaypointSequence.Waypoint startPoint, WaypointSequence.Waypoint endPoint, 
-			double dt, double filter1, double filter2, double maxVelocity) {
+	private static Spline[] generateCenterSplines(WaypointSequence waypointSequence) {
+		//Calculating trajectory of center of the robot
+		int numSegments = waypointSequence.getSize() - 1;
+		Spline[] centerTrajectorySequence = new Spline[waypointSequence.getSize() - 1];
 		
-		double x0 = startPoint.getX();
-		double y0 = startPoint.getY();
-		double theta0 = startPoint.getTheta();
-		double x1 = endPoint.getX();
-		double y1 = endPoint.getY();
-		double theta1 = endPoint.getTheta();
+		//Generating a center spline for each pair of waypoints
+		double startX = waypointSequence.getWaypoint(0).getX();
+		double startY = waypointSequence.getWaypoint(0).getY();
+		double startTheta = waypointSequence.getWaypoint(0).getTheta();
+		WaypointSequence.Waypoint previousPoint = new WaypointSequence.Waypoint(startX, startY, startTheta);
+		for(int i = 0; i < numSegments; i++) {
+			WaypointSequence.Waypoint startPoint = previousPoint;
+			WaypointSequence.Waypoint endPoint = waypointSequence.getWaypoint(i + 1);
+			
+			double x0 = startPoint.getX();
+			double y0 = startPoint.getY();
+			double theta0 = startPoint.getTheta();
+			double x1 = endPoint.getX();
+			double y1 = endPoint.getY();
+			double theta1 = endPoint.getTheta();
+			
+			//Generating spline path for center of robot from given start and end points
+			centerTrajectorySequence[i] = new Spline(x0, y0, theta0, x1, y1, theta1);
+			
+			//Calculating total length
+			totalLength += centerTrajectorySequence[i].getLength();
+			
+			//Setting the start of the next segment to the actual end of the previous one to account for error
+			double endX = centerTrajectorySequence[i].getPoint(1)[0];
+			double endY = centerTrajectorySequence[i].getPoint(1)[1];
+			previousPoint.setX(endX);
+			previousPoint.setY(endY);
+			previousPoint.setTheta(endPoint.getTheta());
+		}
 		
-		//Generating spline path for center of robot from given start and end points
-		Spline centerPath = new Spline(x0, y0, theta0, x1, y1, theta1);
+		
+		
+		return centerTrajectorySequence;
+	}
+	
+	private static Trajectory generateCenterTrajectory(Spline[] centerPath, double dt,
+			double filter1, double filter2, double maxVelocity, double distance) {
 		
 		//Generating a basic velocity curve for the center of the robot
 		VelocityProfileGenerator velProfile = new VelocityProfileGenerator(
-				dt, filter1, filter2, maxVelocity, centerPath.getLength());
+				dt, filter1, filter2, maxVelocity, distance);
 		
 		Trajectory centerTrajectory = velProfile.calculateProfile();
 		
 		//Adding spline points, velocity, and heading to the trajectory
+		int currentSpline = 0;
+		double currentSplineStart = 0;
+		double completedSplineDistance = 0;
 		for(int i = 0; i < centerTrajectory.getLength(); i++) {
-			double percentage = centerPath.getPercentFromDistance(centerTrajectory.getPoint(i).getPosition());
 			Trajectory.Point currentCenterPoint = centerTrajectory.getPoint(i);
+			double currentPosition = currentCenterPoint.getPosition();
 			
-			//Calculating point
-			double[] point = centerPath.getPoint(percentage);
-			centerTrajectory.getPoint(i).setX(point[0]);
-			centerTrajectory.getPoint(i).setY(point[1]);
-			
-			//Calculating heading
-			double heading = centerPath.getAngle(percentage);
-			centerTrajectory.getPoint(i).setHeading(heading);
+			boolean foundPoint = false;
+		      while (!foundPoint) {
+		        double currentSplinePosition = currentPosition - currentSplineStart;
+		        if (currentSplinePosition <= centerPath[currentSpline].getLength()) {
+		          double percentage = centerPath[currentSpline].getPercentFromDistance(currentSplinePosition);
+		          
+		          //Calculating point
+		          double[] point = centerPath[currentSpline].getPoint(percentage);
+		          centerTrajectory.getPoint(i).setX(point[0]);
+		          centerTrajectory.getPoint(i).setY(point[1]);
+					
+		          //Calculating heading
+		          double heading = centerPath[currentSpline].getAngle(percentage);
+		          centerTrajectory.getPoint(i).setHeading(heading);
+		          foundPoint = true;
+		        } else if (currentSpline < centerPath.length - 1) {
+		          completedSplineDistance += centerPath[currentSpline].getLength();
+		          currentSplineStart = completedSplineDistance;
+		          ++currentSpline;
+		        } else {
+		          centerTrajectory.getPoint(i).setHeading(centerPath[centerPath.length - 1].getAngle(1.0));
+		          double[] point = centerPath[centerPath.length - 1].getPoint(1.0);
+		          centerTrajectory.getPoint(i).setX(point[0]);
+		          centerTrajectory.getPoint(i).setY(point[1]);
+		          foundPoint = true;
+		        }
+		      }
 			
 			//Calculating velocity
 			if(i == 0) {
