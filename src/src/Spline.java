@@ -28,7 +28,7 @@ public class Spline {
 		xOffset = x0;
 		yOffset = y0;
 		straightLength = Math.sqrt(Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2));
-		
+		System.out.println(straightLength);
 		thetaOffset = Math.atan2(y1 - y0, x1 - x0);
 		double offsetTheta0 = theta0 - thetaOffset;
 		double offsetTheta1 = theta1 - thetaOffset;
@@ -42,6 +42,8 @@ public class Spline {
 		b = (8 * dydx0 + 7 * dydx1) / Math.pow(straightLength, 3);
 		c = (-6 * dydx0 - 4 * dydx1) / Math.pow(straightLength, 2);
 		e = dydx0;
+		
+		calculateLength();
 	}
 	
 	public String getFormula() {
@@ -78,8 +80,16 @@ public class Spline {
 			}
 			
 		}
-		
-		double rotatedX = arcLengthToX[currentIndex][1];
+		double rotatedX;
+		if(arcLengthToX[currentIndex][0] > currentArcLength && currentIndex > 0) {
+			rotatedX = (arcLengthToX[currentIndex - 1][1] + arcLengthToX[currentIndex][1]) / 2;
+		}
+		else if(arcLengthToX[currentIndex][0] < currentArcLength) {
+			rotatedX = (arcLengthToX[currentIndex + 1][1] + arcLengthToX[currentIndex][1]) / 2;
+		}
+		else {
+			rotatedX = arcLengthToX[currentIndex][1];
+		}
 		double rotatedY = a * Math.pow(rotatedX, 5) + b * Math.pow(rotatedX, 4)
 			+ c * Math.pow(rotatedX, 3) + e * rotatedX;
 		
@@ -90,7 +100,7 @@ public class Spline {
 	}
 	
 	public double getDerivative(double percentage) {
-		/*
+				
 		//Performing binary search to find x value for the input arclength
 		double currentArcLength = percentage * arcLength;
 		int lowerLimit = 0;
@@ -104,16 +114,19 @@ public class Spline {
 			else {
 				lowerLimit = currentIndex + 1;
 			}
-			
+					
 		}
-				
+		
 		double percentX = arcLengthToX[currentIndex][1];
-		*/
-		double percentX = percentage * straightLength;
 		double dydx = 5 * a * Math.pow(percentX, 4) + 4 * b * Math.pow(percentX, 3)
 			+ 3 * c * Math.pow(percentX, 2) + e;
 		
 		return dydx;
+	}
+	
+	public double getDerivativeFromX(double x) {
+		return 5 * a * Math.pow(x, 4) + 4 * b * Math.pow(x, 3)
+		+ 3 * c * Math.pow(x, 2) + e;
 	}
 	
 	public double getAngle(double percentage){
@@ -127,12 +140,13 @@ public class Spline {
 		double dydx;
 		
 		for(int i = 1; i <= numSamples; i++) {
-			dydx = getDerivative((double) i / numSamples);
+			dydx = getDerivativeFromX((double) i / numSamples * straightLength);
 			arcLength += Math.sqrt(1 + Math.pow(dydx, 2)) * straightLength / numSamples;
 			
 			arcLengthToX[i - 1][0] = arcLength;
 			arcLengthToX[i - 1][1] = (double) i / numSamples * straightLength;
 		}
+		System.out.println(arcLength);
 		
 	}
 	

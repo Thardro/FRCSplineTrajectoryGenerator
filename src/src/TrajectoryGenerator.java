@@ -10,6 +10,8 @@ public class TrajectoryGenerator {
 	
 	public static Trajectory[] generateTrajectory(WaypointSequence waypointSequence, double dt, double filter1, 
 			double filter2, double maxVelocity, double wheelbaseWidth) {
+		totalLength = 0;
+		
 		Spline[] centerTrajectorySequence = generateCenterSplines(waypointSequence);
 		
 		Trajectory centerTrajectory = generateCenterTrajectory(centerTrajectorySequence, 
@@ -49,7 +51,7 @@ public class TrajectoryGenerator {
 			
 			//Generating spline path for center of robot from given start and end points
 			centerTrajectorySequence[i] = new Spline(x0, y0, theta0, x1, y1, theta1);
-			
+			System.out.println(centerTrajectorySequence[i].getFormula());
 			//Calculating total length
 			totalLength += centerTrajectorySequence[i].getLength();
 			
@@ -88,7 +90,6 @@ public class TrajectoryGenerator {
 		        double currentSplinePosition = currentPosition - currentSplineStart;
 		        if (currentSplinePosition <= centerPath[currentSpline].getLength()) {
 		          double percentage = centerPath[currentSpline].getPercentFromDistance(currentSplinePosition);
-		          
 		          //Calculating point
 		          double[] point = centerPath[currentSpline].getPoint(percentage);
 		          centerTrajectory.getPoint(i).setX(point[0]);
@@ -124,6 +125,7 @@ public class TrajectoryGenerator {
 					currentCenterPoint.setPosition(centerTrajectory.getPoint(i - 1).getPosition() + distanceCenter);
 					currentCenterPoint.setVelocity(distanceCenter / (currentCenterPoint.getDT() / 1000) );
 			}
+			
 		}
 		
 		return centerTrajectory;
