@@ -51,7 +51,7 @@ public class TrajectoryGenerator {
 			
 			//Generating spline path for center of robot from given start and end points
 			centerTrajectorySequence[i] = new Spline(x0, y0, theta0, x1, y1, theta1);
-			System.out.println(centerTrajectorySequence[i].getFormula());
+			
 			//Calculating total length
 			totalLength += centerTrajectorySequence[i].getLength();
 			
@@ -81,9 +81,11 @@ public class TrajectoryGenerator {
 		int currentSpline = 0;
 		double currentSplineStart = 0;
 		double completedSplineDistance = 0;
+		double lengthScale = distance /
+				centerTrajectory.getPoint(centerTrajectory.getLength() - 1).position;
 		for(int i = 0; i < centerTrajectory.getLength(); i++) {
 			Trajectory.Point currentCenterPoint = centerTrajectory.getPoint(i);
-			double currentPosition = currentCenterPoint.getPosition();
+			double currentPosition = currentCenterPoint.getPosition() * lengthScale;
 			
 			boolean foundPoint = false;
 		      while (!foundPoint) {
@@ -100,10 +102,12 @@ public class TrajectoryGenerator {
 		          centerTrajectory.getPoint(i).setHeading(heading);
 		          foundPoint = true;
 		        } else if (currentSpline < centerPath.length - 1) {
+		          //Moving to next spline
 		          completedSplineDistance += centerPath[currentSpline].getLength();
 		          currentSplineStart = completedSplineDistance;
 		          ++currentSpline;
 		        } else {
+		          //Completing final point on a spline
 		          centerTrajectory.getPoint(i).setHeading(centerPath[centerPath.length - 1].getAngle(1.0));
 		          double[] point = centerPath[centerPath.length - 1].getPoint(1.0);
 		          centerTrajectory.getPoint(i).setX(point[0]);
@@ -125,6 +129,7 @@ public class TrajectoryGenerator {
 					currentCenterPoint.setPosition(centerTrajectory.getPoint(i - 1).getPosition() + distanceCenter);
 					currentCenterPoint.setVelocity(distanceCenter / (currentCenterPoint.getDT() / 1000) );
 			}
+			
 			
 		}
 		

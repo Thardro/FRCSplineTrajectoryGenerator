@@ -2,6 +2,7 @@ package src;
 
 public class Spline {
 
+	//Coordinates at start and end
 	double x0, y0, x1, y1;
 	
 	//y = ax^5 + bx^4 + cx^3 + ex, form of quintic spline
@@ -10,10 +11,11 @@ public class Spline {
 	//Offsets, spline is generated with start at origin and end on x-axis
 	double xOffset, yOffset, thetaOffset;
 	
+	//Length directly from  start point to end point
 	double straightLength;
 	
 	double arcLength = 0;
-	final int numSamples = 1000000;
+	final int numSamples = 50000;
 	
 	double[][] arcLengthToX = new double[numSamples][2];
 	
@@ -28,7 +30,7 @@ public class Spline {
 		xOffset = x0;
 		yOffset = y0;
 		straightLength = Math.sqrt(Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2));
-		System.out.println(straightLength);
+		
 		thetaOffset = Math.atan2(y1 - y0, x1 - x0);
 		double offsetTheta0 = theta0 - thetaOffset;
 		double offsetTheta1 = theta1 - thetaOffset;
@@ -62,9 +64,7 @@ public class Spline {
 		return distance / getLength();
 	}
 	
-	public double[] getPoint(double percent) {
-		double[] point = new double[2];
-		
+	private double getXFromPercent(double percent) {
 		//Performing binary search to find x value for the input arclength
 		double currentArcLength = percent * arcLength;
 		int lowerLimit = 0;
@@ -81,15 +81,32 @@ public class Spline {
 			
 		}
 		double rotatedX;
+		
+		//Interpolating between points in the lookup table to find current x value
 		if(arcLengthToX[currentIndex][0] > currentArcLength && currentIndex > 0) {
-			rotatedX = (arcLengthToX[currentIndex - 1][1] + arcLengthToX[currentIndex][1]) / 2;
+			rotatedX = arcLengthToX[currentIndex - 1][1] + 
+					(currentArcLength - arcLengthToX[currentIndex - 1][0]) *
+					(arcLengthToX[currentIndex][1] - arcLengthToX[currentIndex - 1][1]) /
+					(arcLengthToX[currentIndex][0] - arcLengthToX[currentIndex - 1][0]);
 		}
-		else if(arcLengthToX[currentIndex][0] < currentArcLength) {
-			rotatedX = (arcLengthToX[currentIndex + 1][1] + arcLengthToX[currentIndex][1]) / 2;
+		else if(arcLengthToX[currentIndex][0] < currentArcLength || currentIndex == 0) {
+			rotatedX = arcLengthToX[currentIndex][1] + 
+					(currentArcLength - arcLengthToX[currentIndex][0]) *
+					(arcLengthToX[currentIndex + 1][1] - arcLengthToX[currentIndex][1]) / 
+					(arcLengthToX[currentIndex + 1][0] - arcLengthToX[currentIndex][0]);
 		}
 		else {
 			rotatedX = arcLengthToX[currentIndex][1];
 		}
+		
+		return rotatedX;
+	}
+	
+	public double[] getPoint(double percent) {
+		double[] point = new double[2];
+		double rotatedX = getXFromPercent(percent);
+		
+		//Calculating y value and returning rotated and offset values
 		double rotatedY = a * Math.pow(rotatedX, 5) + b * Math.pow(rotatedX, 4)
 			+ c * Math.pow(rotatedX, 3) + e * rotatedX;
 		
@@ -99,27 +116,11 @@ public class Spline {
 		return point;
 	}
 	
-	public double getDerivative(double percentage) {
+	public double getDerivative(double percent) {
 				
-		//Performing binary search to find x value for the input arclength
-		double currentArcLength = percentage * arcLength;
-		int lowerLimit = 0;
-		int upperLimit = numSamples - 1;
-		int currentIndex = (lowerLimit + upperLimit) / 2;
-		while(lowerLimit <= upperLimit) {
-			currentIndex = (lowerLimit + upperLimit) / 2;
-			if(arcLengthToX[currentIndex][0] > currentArcLength) {
-				upperLimit = currentIndex - 1;
-			}
-			else {
-				lowerLimit = currentIndex + 1;
-			}
-					
-		}
+		double rotatedX = getXFromPercent(percent);
 		
-		double percentX = arcLengthToX[currentIndex][1];
-		double dydx = 5 * a * Math.pow(percentX, 4) + 4 * b * Math.pow(percentX, 3)
-			+ 3 * c * Math.pow(percentX, 2) + e;
+		double dydx = getDerivativeFromX(rotatedX);
 		
 		return dydx;
 	}
@@ -146,7 +147,6 @@ public class Spline {
 			arcLengthToX[i - 1][0] = arcLength;
 			arcLengthToX[i - 1][1] = (double) i / numSamples * straightLength;
 		}
-		System.out.println(arcLength);
 		
 	}
 	
