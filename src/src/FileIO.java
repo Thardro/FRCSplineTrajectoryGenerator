@@ -6,12 +6,17 @@ import java.io.PrintStream;
 
 public class FileIO {
 
-PrintStream writer;
+	PrintStream writer;
 	
 	boolean fileExists;
+	String dir;
+	
+	public FileIO(String dir) {
+		this.dir = dir;
+	}
 
 	public void openFile(String filename) {
-		String url = "/Users/ethan/Robotics/" + filename;
+		String url = dir + filename;
 		System.out.println(url);
 		File file = new File(url);
 		

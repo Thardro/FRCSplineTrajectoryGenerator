@@ -2,14 +2,18 @@ package src;
 
 public class Main {
 	
-	static FileIO fileIO = new FileIO();
+	public static String dir = "/Users/ethan/Robotics/";
+	static FileIO fileIO = new FileIO(dir);
 	
 	//Velocity settings
 	static double filter1 = 400, filter2 = 200, maxVelocity = 4;
 	static double dt = 20;
 	
 	//Robot parameters
-	static double wheelbaseWidth = 2, wheelDiameter = 6, scale = wheelDiameter * Math.PI / 12;
+	static double wheelbaseWidth = 2.4, wheelDiameter = 6, scale = 1 / (wheelDiameter * Math.PI / 12);
+	
+	//Name of class in robot, must be a valid class name
+	static String trajectoryName = "LowBarSideGoal";
 	
 	public static void main(String[] args) {
 		long startTime = System.currentTimeMillis();
@@ -19,7 +23,7 @@ public class Main {
 		sequence.addWaypoint(10, 0, 0);
 		sequence.addWaypoint(20, -4, -Math.PI / 3);
 		
-		Trajectory[] trajectory= TrajectoryGenerator.generateTrajectory(
+		Trajectory[] trajectory = TrajectoryGenerator.generateTrajectory(
 				sequence, dt, filter1, filter2, maxVelocity, wheelbaseWidth);
 		
 		//Scaling speed based on maximum speed achieved
@@ -45,6 +49,9 @@ public class Main {
 					+ "\t" + scaledTrajectory[2].getPoint(i).getX() + "\t" + scaledTrajectory[2].getPoint(i).getY());
 		}
 		fileIO.closeFile();
+		
+		String trajectoryFile = "AutoTrajectory_" + trajectoryName;
+		TrajectoryWriter.writeTrajectory(trajectoryFile, sequence, scaledTrajectory, scale, dt);
 		
 		long endTime = System.currentTimeMillis();
 		System.out.println((endTime - startTime));
